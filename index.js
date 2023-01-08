@@ -5,8 +5,6 @@ const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 
-const newsCard = require("./data/NewsCard.json");
-
 app.use(cors());
 app.use(express.json());
 
@@ -19,17 +17,21 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const HomeSlider = client.db("fancy-nomad").collection("slider");
+
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
     });
 
-    app.get("/newsCard", (req, res) => {
-      res.send(newsCard);
+    app.get("/slider", async (req, res) => {
+      const filter = {};
+      const result = await HomeSlider.find(filter).toArray();
+      res.send(result);
     });
   } finally {
   }
 }
-run().catch(console.log(err.message));
+run().catch((err) => console.log(err.message));
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
