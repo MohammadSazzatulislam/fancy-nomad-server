@@ -18,6 +18,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const HomeSlider = client.db("fancy-nomad").collection("slider");
+    const HomeNature = client.db("fancy-nomad").collection("nature");
+    const HomePlaces = client.db("fancy-nomad").collection("places");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
@@ -26,6 +28,16 @@ async function run() {
     app.get("/slider", async (req, res) => {
       const filter = {};
       const result = await HomeSlider.find(filter).toArray();
+      res.send(result);
+    });
+    app.get("/nature", async (req, res) => {
+      const filter = {};
+      const result = await HomeNature.find(filter).toArray();
+      res.send(result);
+    });
+    app.get("/places", async (req, res) => {
+      const filter = {};
+      const result = await HomePlaces.find(filter).toArray();
       res.send(result);
     });
   } finally {
