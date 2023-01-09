@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 app.use(cors());
@@ -20,6 +20,7 @@ async function run() {
     const HomeSlider = client.db("fancy-nomad").collection("slider");
     const HomeNature = client.db("fancy-nomad").collection("nature");
     const HomePlaces = client.db("fancy-nomad").collection("places");
+    const DestinationPackages = client.db("fancy-nomad").collection("packages");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
@@ -40,6 +41,29 @@ async function run() {
       const result = await HomePlaces.find(filter).toArray();
       res.send(result);
     });
+
+    app.get('/places/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = {_id: ObjectId(id)}
+      const result = await HomePlaces.findOne(filter)
+      res.send(result)
+    })
+
+    app.get("/packages/:name", async (req, res) => {
+      const name = req.params.name;
+      const filter = { name: name };
+      const result = await DestinationPackages.find(filter).toArray();
+      res.send(result);
+    });
+
+    app.get('/singlePackages/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: ObjectId(id) }
+      const result = await DestinationPackages.findOne(filter)
+      res.send(result)
+    })
+
+
   } finally {
   }
 }
