@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
@@ -15,6 +16,20 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function veryJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "Unauthorization Access" });
+  }
+  jwt.verify(authHeader, process.env.JWT_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "forbidden Access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     const HomeSlider = client.db("fancy-nomad").collection("slider");
@@ -22,29 +37,30 @@ async function run() {
     const HomePlaces = client.db("fancy-nomad").collection("places");
     const DestinationPackages = client.db("fancy-nomad").collection("packages");
     const UsersCollection = client.db("fancy-nomad").collection("users");
+    const BookingPackages = client.db("fancy-nomad").collection("booked");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
     });
 
-   app.get("/jwt/:email", async (req, res) => {
-     const email = req.params.email;
-     const query = { email };
-     const users = await usersCollection.findOne(query);
-     if (users) {
-       const token = jwt.sign({ users }, process.env.JWT_TOKEN_SECRET, {
-         expiresIn: "7d",
-       });
-       return res.send({ token });
-     }
-     res.status(403).send({ message: "forbidden access" });
-   });
+    app.get("/jwt/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const users = await UsersCollection.findOne(query);
+      if (users) {
+        const token = jwt.sign({ users }, process.env.JWT_TOKEN_SECRET, {
+          expiresIn: "7d",
+        });
+        return res.send({ token });
+      }
+      res.status(403).send({ message: "forbidden access" });
+    });
 
-    app.post('/users', async (req, res) => {
-      const user = req.body
-      const result = UsersCollection.insertOne(user)
-      res.send(result)
-   })
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await UsersCollection.insertOne(user);
+      res.send(result);
+    });
 
     app.get("/slider", async (req, res) => {
       const filter = {};
@@ -83,12 +99,20 @@ async function run() {
       res.send(result);
     });
 
-    app.post('/bookingPackage', async (req, res) => {
-      const bookedPackage = req.body
-      
-    })
-
-
+    app.post("/bookingPackages", async (req, res) => {
+      const bookedPackage = req.body;
+      const filter = {};
+      const booked = await BookingPackages.find(filter).toArray();
+      const alreadyBooked = booked.filter(
+        (element) => element.packageName === bookedPackage.packageName
+      );
+      if (alreadyBooked.length > 0) {
+        res.status(403).send({ message: "You Already Booked This Package" });
+      } else {
+        const result = await BookingPackages.insertOne(bookedPackage);
+        res.send(result);
+      }
+    });
   } finally {
   }
 }
