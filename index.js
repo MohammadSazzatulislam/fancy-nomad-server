@@ -21,10 +21,30 @@ async function run() {
     const HomeNature = client.db("fancy-nomad").collection("nature");
     const HomePlaces = client.db("fancy-nomad").collection("places");
     const DestinationPackages = client.db("fancy-nomad").collection("packages");
+    const UsersCollection = client.db("fancy-nomad").collection("users");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
     });
+
+   app.get("/jwt/:email", async (req, res) => {
+     const email = req.params.email;
+     const query = { email };
+     const users = await usersCollection.findOne(query);
+     if (users) {
+       const token = jwt.sign({ users }, process.env.JWT_TOKEN_SECRET, {
+         expiresIn: "7d",
+       });
+       return res.send({ token });
+     }
+     res.status(403).send({ message: "forbidden access" });
+   });
+
+    app.post('/users', async (req, res) => {
+      const user = req.body
+      const result = UsersCollection.insertOne(user)
+      res.send(result)
+   })
 
     app.get("/slider", async (req, res) => {
       const filter = {};
@@ -42,12 +62,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/places/:id', async (req, res) => {
-      const id = req.params.id
-      const filter = {_id: ObjectId(id)}
-      const result = await HomePlaces.findOne(filter)
-      res.send(result)
-    })
+    app.get("/places/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await HomePlaces.findOne(filter);
+      res.send(result);
+    });
 
     app.get("/packages/:name", async (req, res) => {
       const name = req.params.name;
@@ -56,12 +76,16 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/singlePackages/:id', async (req, res) => {
+    app.get("/singlePackages/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
-      const result = await DestinationPackages.findOne(filter)
-      console.log(result)
-      res.send(result)
+      const result = await DestinationPackages.findOne(filter);
+      res.send(result);
+    });
+
+    app.post('/bookingPackage', async (req, res) => {
+      const bookedPackage = req.body
+      
     })
 
 
