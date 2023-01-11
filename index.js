@@ -120,6 +120,23 @@ async function run() {
       const result = await BookingPackages.find(filter).toArray();
       res.send(result);
     });
+    app.get('/myBookingUpdate/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: ObjectId(id) }
+      const result = await BookingPackages.findOne(filter)
+      res.send(result)
+    })
+
+    app.delete('/myBooking/:id' ,async(req, res)=> {
+      const id = req.params.id
+      const filter = {_id:ObjectId(id)}
+      const result = await BookingPackages.deleteOne(filter)
+      res.send(result)
+    })
+
+
+
+
   } finally {
   }
 }
