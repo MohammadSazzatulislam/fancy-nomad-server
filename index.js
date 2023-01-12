@@ -163,6 +163,13 @@ async function run() {
       const result = BookingPackages.updateOne(filter, updateDoc, options);
       res.send(result);
     });
+
+    app.get("/myBookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await BookingPackages.findOne(filter);
+      res.send(result);
+    });
   } finally {
   }
 }
