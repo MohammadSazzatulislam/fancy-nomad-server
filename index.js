@@ -120,23 +120,49 @@ async function run() {
       const result = await BookingPackages.find(filter).toArray();
       res.send(result);
     });
-    app.get('/myBookingUpdate/:id', async (req, res) => {
-      const id = req.params.id
-      const filter = { _id: ObjectId(id) }
-      const result = await BookingPackages.findOne(filter)
-      res.send(result)
-    })
+    app.get("/myBookingUpdate/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await BookingPackages.findOne(filter);
+      res.send(result);
+    });
 
-    app.delete('/myBooking/:id' ,async(req, res)=> {
-      const id = req.params.id
-      const filter = {_id:ObjectId(id)}
-      const result = await BookingPackages.deleteOne(filter)
-      res.send(result)
-    })
+    app.delete("/myBooking/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await BookingPackages.deleteOne(filter);
+      res.send(result);
+    });
 
-
-
-
+    app.patch("/packageUpdate/:id", (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const updateBooking = req.body;
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          firstName: updateBooking.firstName,
+          lastName: updateBooking.lastName,
+          email: updateBooking.email,
+          Pnumber: updateBooking.Pnumber,
+          address: updateBooking.address,
+          city: updateBooking.city,
+          postCode: updateBooking.postCode,
+          country: updateBooking.country,
+          nationality: updateBooking.nationality,
+          checkInDate: updateBooking.checkInDate,
+          checkOutDate: updateBooking.checkOutDate,
+          rooms: updateBooking.rooms,
+          adults: updateBooking.adults,
+          children: updateBooking.children,
+          packageName: updateBooking.packageName,
+          packagePrice: updateBooking.packagePrice,
+          packImg: updateBooking.packImg,
+        },
+      };
+      const result = BookingPackages.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
   } finally {
   }
 }
