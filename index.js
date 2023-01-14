@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECTET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -38,6 +39,7 @@ async function run() {
     const DestinationPackages = client.db("fancy-nomad").collection("packages");
     const UsersCollection = client.db("fancy-nomad").collection("users");
     const BookingPackages = client.db("fancy-nomad").collection("booked");
+    const PaymentUserInfo = client.db("fancy-nomad").collection("payUserInfo");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
@@ -62,11 +64,19 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const result = await UsersCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     app.get("/slider", async (req, res) => {
       const filter = {};
       const result = await HomeSlider.find(filter).toArray();
       res.send(result);
     });
+
     app.get("/nature", async (req, res) => {
       const filter = {};
       const result = await HomeNature.find(filter).toArray();
@@ -168,6 +178,42 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const result = await BookingPackages.findOne(filter);
+      res.send(result);
+    });
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const price = req.body;
+      const amount = price.packagePrice * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payUsersInfo", async (req, res) => {
+      const user = req.body;
+      const result = await PaymentUserInfo.insertOne(user);
+      const id = user.bookingId;
+      const filter = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: true,
+        },
+      };
+
+      const alreadyBooked = await BookingPackages.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.get("/payUserInfo/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email };
+      const result = await PaymentUserInfo.findOne(filter);
       res.send(result);
     });
   } finally {
