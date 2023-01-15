@@ -40,6 +40,9 @@ async function run() {
     const UsersCollection = client.db("fancy-nomad").collection("users");
     const BookingPackages = client.db("fancy-nomad").collection("booked");
     const PaymentUserInfo = client.db("fancy-nomad").collection("payUserInfo");
+    const CommentCollection = client
+      .db("fancy-nomad")
+      .collection("usersComment");
 
     app.get("/", (req, res) => {
       res.send("Fancy nomad api is running...");
@@ -214,6 +217,25 @@ async function run() {
       const email = req.params.email;
       const filter = { email };
       const result = await PaymentUserInfo.findOne(filter);
+      res.send(result);
+    });
+
+    app.post("/userComment", async (req, res) => {
+      const comment = req.body;
+      const result = await CommentCollection.insertOne(comment);
+      res.send(result);
+    });
+
+    app.get("/userComment", async (req, res) => {
+      const filter = {};
+      const result = await CommentCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    app.delete("/userComment/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await CommentCollection.deleteOne(filter);
       res.send(result);
     });
   } finally {
